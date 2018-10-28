@@ -1,35 +1,30 @@
 """
 to run tests: 
-C:\ProgramData\Anaconda3\python.exe -m unittest discover -s tests -p 'test*.py'
+pipenv shell python -m pytest tests
 """
 
-import pathlib
-import unittest
-import sys
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+import pandas.util.testing as pdt
+from droprows import main
 
-from main import test_function
+def test_droprows():
+    current_df = pd.DataFrame([['101', '123'],
+                                ['102', '234'],
+                                ['103', '345'], 
+                                ['104', 'error'],
+                                ['105', 'error']], columns=['id', 'value'])
 
-path = str(pathlib.Path(__file__).parents[1]) # generate path to parent dir
-if path not in sys.path:
-    sys.path.append(path)
+    assert main.select_non_numeric(current_df) == ['104', '105']
 
-class Test_main(unittest.TestCase):
+    previous_df = pd.DataFrame([['201', '223'],
+                                ['202', '334'],
+                                ['203', '445'], 
+                                ['104', '456']], columns=['id', 'value'])
+    
+    correct_df = pd.DataFrame([['101', '123'],
+                                ['102', '234'],
+                                ['103', '345'], 
+                                ['104', '456']], columns=['id', 'value'])
 
-    def test_test_function(self):
-        # import end result to test against
-        path = str(pathlib.Path(__file__).parents[1]) # generates path to proj_etd
-        test_filepath = ''
-        test = pd.read_csv(test_filepath)
-        
-        # generate file using imported function
-        check_raw_filepath = ''
-        check_raw = pd.read_csv(check_raw_filepath)
-        check = test_function(check_raw)
-        
-        # test
-        assert_frame_equal(test, check)
-        
-if __name__ == '__main__':
-    unittest.main()
+    test_df = main.replace_non_numeric(current_df, previous_df)
+    pdt.assert_frame_equal(test_df, correct_df)
